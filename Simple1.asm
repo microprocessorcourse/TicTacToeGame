@@ -28,7 +28,9 @@ loop 	tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0	; move read data from TABLAT to (FSR0), increment FSR0	
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
+>>>>>>> THEIRS
 	
 	goto	0
 
 	end
+
