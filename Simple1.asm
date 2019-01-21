@@ -12,10 +12,23 @@ start
 	bra 	test
 loop	movff 	0x06, PORTC
 	incf 	0x06, W, ACCESS
-test	movwf	0x06, ACCESS	    ; Test for end of loop condition
-	movlw 	0xFF
+	movwf   0x06, ACCESS
+test	movlw 	0x
+	movwf	0x07, ACCESS	    ; Test for end of loop condition
+	call    delay
+	movlw   0xFF
 	cpfsgt 	0x06, ACCESS
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
 
+delay   decfsz  0x07
+	bra delay
+	return
+	
 	end
+	
+
+myTable data "hello"
+        constant myArray=0x30
+        constant counter=0x10
+start   lfsr     FSR0, myArray
