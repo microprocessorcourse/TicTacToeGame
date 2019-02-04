@@ -90,6 +90,46 @@ test7
 test8
     cpfseq 0b01111101
     goto test9
-    movlw "
-
-end
+    movlw "D"
+    return
+test9
+    cpfseq 0b11101011
+    goto test10
+    movlw "4"
+    return
+test10
+    cpfseq 0b11011011
+    goto test10
+    movlw "5"
+    return
+test11
+    cpfseq 0b10111011
+    goto test12
+    movlw "6"
+    return
+test12
+    cpfseq 0b01111011
+    goto test13
+    movlw "E"
+    return
+test13
+    cpfseq 0b11100111
+    goto test14
+    movlw "1"
+test14 
+    cpfseq 0b11010111
+    goto test15
+    movlw "2"
+test15
+    cpfseq 0b10110111
+    goto test16
+    movlw "3"
+    return
+test16
+    cpfseq 0b01110111
+    goto test17
+    movlw "F"
+    return
+test17
+    movlw "INVALID"
+    return
