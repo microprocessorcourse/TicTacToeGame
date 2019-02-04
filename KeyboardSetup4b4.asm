@@ -3,9 +3,9 @@
     global keyboard_setup, rows, columns
     extern LCD_delay_ms
 
-    code
+ 
 acs0    udata_acs  
-KYB_row0   res 1
+row0       res 1
 row1       res 1
 row2       res 1
 row3       res 1
@@ -15,7 +15,8 @@ column1    res 1
 column2    res 1
 column3    res 1
 col_input  res 1
-    
+
+code
 keyboard_setup
     banksel PADCFG1
     bsf PADCFG1, REPU, BANKED
@@ -27,17 +28,16 @@ rows
     movlw 0x0F
     movwf TRISE
     movlw 0.2
-    call LCD_delay_ms
+    call  LCD_delay_ms
     movff PORTE, row_input
     movlw 0x0E
-    movwf KYB_row0
+    movwf row0
     movlw 0x0D
     movwf row1
     movlw 0x0B
     movwf row2
     movlw 0x07
     movwf row3
-    call test1
     clrf TRISD
     movff row_input, PORTD
     
@@ -48,24 +48,11 @@ columns
     movlw 0.2
     call LCD_delay_ms
     movff PORTE, col_input
-    movlw 0b
-end
-    
-    
-testrow1    
-    cpfseq  testrow1
-    goto testrow2
-    call rowfound1
-testrow2
-    cpfseq  testrow2
-    goto next test
-    call rowfoudn2
-    
-    
-    
+ 
 
 test1
     movf row_input, W
+    iorwf col_input, W
     cpfseq 0b11101110
     goto test2 
     movlw "A"
@@ -73,14 +60,36 @@ test1
 test2
     cpfseq 0b11101101
     goto test3
-    return "0"
+    movlw "0"
+    return
 test3
     cpfseq 0b11101011
     goto test4
-    return "B"
+    movlw "B"
+    return
 test4
     cpfseq 0b11100111
     goto test5
-    return "C"
+    movlw "C"
+    return
 test5
-    
+    cpfseq 0b11101101
+    goto test6
+    movlw "7"
+    return
+test6
+    cpfseq 0b11011101
+    goto test7
+    movlw "8"
+    return
+test7
+    cpfseq 0b10111101
+    goto test8
+    movlw "9"
+    return
+test8
+    cpfseq 0b01111101
+    goto test9
+    movlw "
+
+end
