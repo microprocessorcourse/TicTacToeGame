@@ -26,6 +26,10 @@
     </logicalFolder>
     <itemPath>README.md</itemPath>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+    <Elem>//icnas3.cc.ic.ac.uk/jb2516/MicroprocessorCourseLec2/MicroprocessorsLab</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">

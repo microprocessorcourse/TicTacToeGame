@@ -28,7 +28,6 @@ keyboard_setup
 rows
     movlw 0x0F
     movwf TRISE
-    call  LCD_delay_ms
     movff PORTE, row_input
     movlw 0x0E
     movwf row0
@@ -61,7 +60,7 @@ test1 ; this is the correct way, registers f and W have to make sense create var
     movlw "A"
     return
 test2
-    cpfseq 0b11101101
+    cpfseq combo
     goto test3
     movlw "0"
     return
@@ -102,7 +101,7 @@ test9
     return
 test10
     cpfseq 0b11011011
-    goto test10
+    goto test11
     movlw "5"
     return
 test11
@@ -136,7 +135,7 @@ test16
     movlw "F"
     return
 test17
-    movlw 0xA
+    movlw 0x00
     return
 
     end
