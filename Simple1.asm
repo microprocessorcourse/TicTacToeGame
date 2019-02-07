@@ -1,7 +1,8 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_clear, LCD_newline ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_clear, LCD_newline, LCD_Send_Byte_D ; external LCD subroutines
+	extern  keyboard_setup, rows, columns, test1
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -40,8 +41,14 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
-		
-	movlw	myTable_l-1	; output message to LCD (leave out "\n")
+	
+	call   keyboard_setup
+	call   rows
+	call   columns
+	call   test1
+	;call   LCD_Send_Byte_D
+	
+	;movlw	myTable_l-1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
 	
