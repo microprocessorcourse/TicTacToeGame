@@ -1,7 +1,7 @@
 #include p18f87k22.inc
  
-    global keyboard_setup, rows, columns
-    extern LCD_delay_ms
+    global keyboard_setup, rows, columns, test1
+    extern LCD_delay_ms, LCD_Send_Byte_D
 
  
 acs0    udata_acs  
@@ -15,8 +15,9 @@ column1    res 1
 column2    res 1
 column3    res 1
 col_input  res 1
+combo      res 1
+    code
 
-code
 keyboard_setup
     banksel PADCFG1
     bsf PADCFG1, REPU, BANKED
@@ -27,7 +28,6 @@ keyboard_setup
 rows
     movlw 0x0F
     movwf TRISE
-    movlw 0.2
     call  LCD_delay_ms
     movff PORTE, row_input
     movlw 0x0E
@@ -45,15 +45,18 @@ columns
     clrf TRISE
     movlw 0xF0
     movwf TRISE
-    movlw 0.2
     call LCD_delay_ms
     movff PORTE, col_input
+    movff col_input, PORTD
+
  
 
-test1
+test1 ; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
-    iorwf col_input, W
-    cpfseq 0b11101110
+    iorwf col_input, W 
+    movwf combo
+    movlw 0b11101110
+    cpfseq combo
     goto test2 
     movlw "A"
     return
@@ -116,10 +119,12 @@ test13
     cpfseq 0b11100111
     goto test14
     movlw "1"
+    return
 test14 
     cpfseq 0b11010111
     goto test15
     movlw "2"
+    return
 test15
     cpfseq 0b10110111
     goto test16
@@ -131,5 +136,7 @@ test16
     movlw "F"
     return
 test17
-    movlw "INVALID"
+    movlw 0xA
     return
+
+    end
