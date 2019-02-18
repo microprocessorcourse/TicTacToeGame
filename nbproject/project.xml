@@ -11,6 +11,19 @@
             <header-extensions/>
             <asminc-extensions/>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <sourceRootList>
+                <sourceRootElem>.</sourceRootElem>
+                <sourceRootElem>//icnas3.cc.ic.ac.uk/jb2516/MicroprocessorCourseLec2/MicroprocessorsLab</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
             <make-dep-projects/>
         </data>
     </configuration>

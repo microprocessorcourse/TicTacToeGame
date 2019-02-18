@@ -1,8 +1,8 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D ; external LCD subroutines
 	extern  keyboard_setup, rows, columns, test1
+	extern touchpad_init, touchpad_run
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -24,7 +24,6 @@ main	code
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup LCD
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -42,20 +41,14 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
 	
-	movlw	myTable_l-1	; output message to LCD (leave out "\n")
-	lfsr	FSR2, myArray
-	call	LCD_Write_Message
-	
-	movlw	myTable_l	; output message to UART
-	lfsr	FSR2, myArray
-	call	UART_Transmit_Message
-	
-	call   keyboard_setup
-	call   rows
-	call   columns
-	call   test1
-	call   LCD_Send_Byte_D
-	call   UART_Transmit_Byte
+
+	call touchpad_init
+	;call   keyboard_setup
+	;call   rows
+	;all   columns
+	;call   test1
+	;call   LCD_Send_Byte_D
+	;call   UART_Transmit_Byte
 
 	goto	$		; goto current line in code
 	; a delay subroutine if you need one, times around loop in delay_count

@@ -1,7 +1,6 @@
 #include p18f87k22.inc
  
     global keyboard_setup, rows, columns, test1
-    extern LCD_delay_ms, LCD_Send_Byte_D
 
  
 acs0    udata_acs  
@@ -28,6 +27,8 @@ keyboard_setup
 rows
     movlw 0x0F
     movwf TRISE
+    ;movlw .2
+    ;call LCD_delay_ms
     movff PORTE, row_input
     movlw 0x0E
     movwf row0
@@ -39,22 +40,25 @@ rows
     movwf row3
     clrf TRISD
     movff row_input, PORTD
+    return
     
 columns
     clrf TRISE
     movlw 0xF0
     movwf TRISE
-    call LCD_delay_ms
+    ;call LCD_delay_ms
     movff PORTE, col_input
     movff col_input, PORTD
+    return
 
  
 
 test1 ; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
-    iorwf col_input, W 
+    iorwf col_input, W
+    movlw 0xEE
     movwf combo
-    movlw 0b11101110
+    movlw 0xEE
     cpfseq combo
     goto test2 
     movlw "A"
