@@ -1,16 +1,18 @@
 
 #include p18f87k22.inc
 
-    global touchpad_init, touchpad_run
+    global touchpad_init, touchpad_run, GLCD_clear
     
 ;player1_input res 1
 ;player2_input res 1
 acs0    udata_acs   ; named variables in access ram
-LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
-LCD_cnt_h   res 1   ; reserve 1 byte for variable LCD_cnt_h
-LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
-char_X      res 1   ; reserve memory address for X and O characters
-char_O      res 1
+LCD_cnt_l     res 1   ; reserve 1 byte for variable LCD_cnt_l
+LCD_cnt_h     res 1   ; reserve 1 byte for variable LCD_cnt_h
+LCD_cnt_ms    res 1   ; reserve 1 byte for ms counter
+char_X        res 1   ; reserve memory address for X and O characters
+char_O        res 1
+Y_counter     res 1
+Page_counter  res 1    
   
     constant cs1=0 ; set names for control pins
     constant cs2=1
@@ -29,10 +31,10 @@ touchpad_init
     clrf LATB
     clrf TRISD
     clrf TRISB
-    bsf LATB, RST ; reset button required to be 1 for display on?
-    bcf LATB, cs1 ; cs1 and cs2 pattern not clear both out to page 0
+    bsf LATB, RST ; reset button on when low
+    bcf LATB, cs1 ; cs1 and cs2 on when low
     bsf LATB, cs2 
-    movlw 20
+    movlw 20 ; 20ms delay after latch
     call LCD_delay_ms
     call touchpad_run
     return
@@ -51,12 +53,6 @@ touchpad_run
     call LCD_delay_ms
     ;movlw  0x55 ; this and line 53-55 is a test at random parts of display shift horizontally here
     ;call GLCD_Cmdwrite
-    movlw 0x7F
-    call GLCD_Cmdwrite
-    movlw 0xC;
-    call GLCD_Datawrite
-    movlw 0xD
-    call GLCD_Datawrite
     return 
 touchpad_test
     movlw 0x48
@@ -84,6 +80,25 @@ GLCD_Datawrite
     return
 
 GLCD_clear
+              
+	  
+	      movlw 0x07
+              movwf Page_counter
+Page_clear    movlw 0x40
+	      call GLCD_Cmdwrite
+	      movlw 0x3F
+	      movwf Y_counter
+y_loop        movf Page_counter, W
+	      addlw 0xB8
+	      call GLCD_Cmdwrite
+	      movlw 0xFF
+	      call GLCD_Datawrite
+	      decfsz Y_counter
+              bra y_loop
+              decfsz Page_counter
+	      bra Page_clear
+	      return
+    
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
 	nop

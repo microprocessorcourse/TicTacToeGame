@@ -2,7 +2,7 @@
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
 	extern  keyboard_setup, rows, columns, test1
-	extern touchpad_init, touchpad_run
+	extern touchpad_init, touchpad_run, GLCD_clear
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -24,7 +24,7 @@ main	code
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
-	goto	start
+	goto	start 
 	
 	; ******* Main programme ****************************************
 start 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
@@ -43,6 +43,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 
 	call touchpad_init
+	call GLCD_clear
 	;call   keyboard_setup
 	;call   rows
 	;all   columns
