@@ -1,7 +1,7 @@
 
 #include p18f87k22.inc
 
-    global touchpad_init, touchpad_run, GLCD_clear
+    global GLCD_init, GLCD_test, GLCD_clear, GLCD_set_horizontal
     
 ;player1_input res 1
 ;player2_input res 1
@@ -13,7 +13,8 @@ char_X        res 1   ; reserve memory address for X and O characters
 char_O        res 1
 Y_counter     res 1
 Page_counter  res 1    
-  
+line_setter   res 1 
+y_address     res 1
     constant cs1=0 ; set names for control pins
     constant cs2=1
     constant RS=2
@@ -27,18 +28,15 @@ Page_counter  res 1
 GLCD code
 
 
-touchpad_init
+GLCD_init
     clrf LATB
     clrf TRISD
     clrf TRISB
     bsf LATB, RST ; reset button on when low
     bcf LATB, cs1 ; cs1 and cs2 on when low
-    bsf LATB, cs2 
+    bcf LATB, cs2 
     movlw 20 ; 20ms delay after latch
     call LCD_delay_ms
-    call touchpad_run
-    return
-touchpad_run
     movlw DISP_OFF ; must turn off display to initialize and then turn on again
     call GLCD_Cmdwrite
     movlw 0x40    ; set x address 0-63 is page 1
@@ -51,26 +49,21 @@ touchpad_run
     call GLCD_Cmdwrite
     movlw .10
     call LCD_delay_ms
-    ;movlw  0x55 ; this and line 53-55 is a test at random parts of display shift horizontally here
-    ;call GLCD_Cmdwrite
     return 
-touchpad_test
+    
+GLCD_test
     movlw 0x48
-    movwf PORTD
     call GLCD_Cmdwrite
-    movlw 0xC1
-    movwf PORTD
-    call GLCD_Cmdwrite
-    movlw 5
-    movwf PORTD
+    movlw 0xC0
     call GLCD_Datawrite
     return
+    
 GLCD_Cmdwrite
     movwf PORTD
     bcf LATB, RS ; RS low for command write
     bcf LATB, RW ; RW low for write
     call LCD_Enable
-    return
+    return  
     
 GLCD_Datawrite
     movwf PORTD
@@ -78,27 +71,79 @@ GLCD_Datawrite
     bcf LATB, RW ; RW low for write
     call LCD_Enable
     return
-
+    
 GLCD_clear
-              
-	  
-	      movlw 0x07
+	      movlw 0x08
               movwf Page_counter
 Page_clear    movlw 0x40
 	      call GLCD_Cmdwrite
-	      movlw 0x3F
+	      movlw 0x40
 	      movwf Y_counter
 y_loop        movf Page_counter, W
 	      addlw 0xB8
 	      call GLCD_Cmdwrite
-	      movlw 0xFF
+	      movlw 0x00
 	      call GLCD_Datawrite
 	      decfsz Y_counter
               bra y_loop
               decfsz Page_counter
 	      bra Page_clear
 	      return
-    
+
+	      
+GLCD_fill
+	      movlw 0x08
+              movwf Page_counter
+Page_fill    movlw 0x40
+	      call GLCD_Cmdwrite
+	      movlw 0x40
+	      movwf Y_counter
+y_loopp       movf Page_counter, W
+	      addlw 0xB8
+	      call GLCD_Cmdwrite
+	      movlw 0xFF; fills display
+	      call GLCD_Datawrite
+	      decfsz Y_counter
+              bra y_loopp
+              decfsz Page_counter
+	      bra Page_fill
+	      return
+	      
+GLCD_set_horizontal
+	call GLCD_clear
+	movlw 0x40
+	call GLCD_Cmdwrite
+	movlw 0xBA; set to page 2
+	call GLCD_Cmdwrite
+	movlw 0x40; not 3F but need 0x40 or wont set last y adress
+	movwf Y_counter
+rerun	movlw 0x80
+	call GLCD_Datawrite
+	decfsz Y_counter
+	bra rerun
+	movlw 0x40
+	call GLCD_Cmdwrite
+	movlw 0xBD; horizontal line on page 5
+	call GLCD_Cmdwrite
+	movlw 0x40; not 3F but need 0x40 or wont set last y adress
+	movwf Y_counter
+rerunn	movlw 0x80 ; valu for 10000000
+	call GLCD_Datawrite
+	decfsz Y_counter
+	bra rerunn
+GLCD_set_vertical
+	movlw 0x08
+	movwf Page_counter
+hello	movlw 0x60
+	call GLCD_Cmdwrite
+	movf Page_counter, W
+	addlw 0xB8
+	call GLCD_Cmdwrite
+	movlw 0xFF
+	call GLCD_Datawrite
+	decfsz Page_counter
+	bra hello
+	return
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
 	nop
