@@ -1,7 +1,7 @@
 
 #include p18f87k22.inc
 
-    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal
+    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char
     
 ;player1_input res 1
 ;player2_input res 1
@@ -15,6 +15,8 @@ Y_counter     res 1
 Page_counter  res 1    
 line_setter   res 1 
 y_address     res 1
+Xshape_counter res 1
+Xshape_drawer res 1
     constant cs1=0 ; set names for control pins
     constant cs2=1
     constant RS=2
@@ -23,6 +25,8 @@ y_address     res 1
     constant RST=5
     constant DISP_ON=0x3F
     constant DISP_OFF=0x3E
+    constant Y_start=0x40
+    constant Page0=0xB8
 
   
 GLCD code
@@ -149,6 +153,22 @@ hello	movlw 0x60; set Y address for vertical line at 0x60
 	call GLCD_Datawrite
 	decfsz Page_counter
 	bra hello
+	return
+X_char
+	movlw 0x40
+	call GLCD_Cmdwrite
+	movlw 0xB8
+	call GLCD_Cmdwrite
+	movlw 0x08
+	movwf Xshape_counter
+	movlw 0x01
+	movwf Xshape_drawer
+	movlw 0x01
+hello2	call GLCD_Datawrite
+	movwf Xshape_drawer
+	rlncf Xshape_drawer, 0; rotate right one bit no carry allows for drawing of line
+	decfsz Xshape_counter
+	bra hello2
 	return
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
