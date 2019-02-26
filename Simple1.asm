@@ -2,7 +2,7 @@
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
 	extern  keyboard_setup, rows, columns, test1
-	extern touchpad_init, touchpad_run, GLCD_clear
+	extern  GLCD_init, GLCD_clear, GLCD_fill, GLCD_set_horizontal
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -42,8 +42,8 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	bra	loop		; keep going until finished
 	
 
-	call touchpad_init
-	call GLCD_clear
+	call GLCD_init
+	call GLCD_set_horizontal
 	;call   keyboard_setup
 	;call   rows
 	;all   columns
