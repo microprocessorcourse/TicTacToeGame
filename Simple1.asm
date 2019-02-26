@@ -2,7 +2,7 @@
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
 	extern  keyboard_setup, rows, columns, test1
-	extern touchpad_init, touchpad_run, GLCD_clear
+	extern GLCD_init, GLCD_clear, GLCD_set_horizontal
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
