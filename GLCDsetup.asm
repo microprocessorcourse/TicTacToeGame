@@ -17,6 +17,7 @@ line_setter   res 1
 y_address     res 1
 Xshape_counter res 1
 Xshape_drawer res 1
+Xshape_page res 1
     constant cs1=0 ; set names for control pins
     constant cs2=1
     constant RS=2
@@ -155,9 +156,14 @@ hello	movlw 0x60; set Y address for vertical line at 0x60
 	bra hello
 	return
 X_char
-	movlw 0x40
+line1	bsf LATB, cs2; turn off right scren to only draw X in first box
+	movlw 0x45;  this is halfway point in 1st box to make x appear in middle of box obtained from vertical line Y address
 	call GLCD_Cmdwrite
 	movlw 0xB8
+	call GLCD_Cmdwrite
+	movlw 0xB8
+        movwf Xshape_page; do this on page 0
+pagelop	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
 	movwf Xshape_counter
@@ -165,10 +171,40 @@ X_char
 	movwf Xshape_drawer
 	movlw 0x01
 hello2	call GLCD_Datawrite
-	movwf Xshape_drawer
-	rlncf Xshape_drawer, 0; rotate right one bit no carry allows for drawing of line
+	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
+	rlncf Xshape_drawer, 0; rotate left one bit no carry allows for drawing of line top to bottom
 	decfsz Xshape_counter
 	bra hello2
+	incf Xshape_page
+	movlw 0xBA
+	cpfseq Xshape_page
+	bra pagelop
+	bcf LATB, cs1; turn back on right screen
+	call X_char2
+	return
+X_char2
+line2	bsf LATB, cs2; turn off right scren to only draw X in first box
+	movlw 0x45
+	call GLCD_Cmdwrite
+	movlw 0xB9
+        movwf Xshape_page; do this on page 0
+pagelo 	movf Xshape_page, W
+	call GLCD_Cmdwrite
+	movlw 0x08
+	movwf Xshape_counter
+	movlw 0x80
+	movwf Xshape_drawer
+	movlw 0x80
+hello22	call GLCD_Datawrite
+	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
+	rrncf Xshape_drawer, 0; rotate right one bit no carry allows for drawing of line2 bottom to top
+	decfsz Xshape_counter
+	bra hello22
+	decf Xshape_page
+	movlw 0xB7
+	cpfseq Xshape_page
+	bra pagelo
+	bcf LATB, cs1; turn back on right screen
 	return
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
