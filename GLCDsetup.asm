@@ -1,7 +1,7 @@
 
 #include p18f87k22.inc
 
-    global GLCD_init, GLCD_test, GLCD_clear, GLCD_set_horizontal
+    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal
     
 ;player1_input res 1
 ;player2_input res 1
@@ -111,33 +111,39 @@ y_loopp       movf Page_counter, W
 	      
 GLCD_set_horizontal
 	call GLCD_clear
-	movlw 0x40
+	movlw 0x40; start position
 	call GLCD_Cmdwrite
 	movlw 0xBA; set to page 2
 	call GLCD_Cmdwrite
 	movlw 0x40; not 3F but need 0x40 or wont set last y adress
 	movwf Y_counter
-rerun	movlw 0x80
+rerun	movlw 0x08; value for 0b00010000 on page 2
 	call GLCD_Datawrite
 	decfsz Y_counter
-	bra rerun
+	bra rerun; rerun with Y incrementing alone after data instruction 
 	movlw 0x40
 	call GLCD_Cmdwrite
-	movlw 0xBD; horizontal line on page 5
+	movlw 0xBD; second horizontal line on page 5 now
 	call GLCD_Cmdwrite
 	movlw 0x40; not 3F but need 0x40 or wont set last y adress
 	movwf Y_counter
-rerunn	movlw 0x80 ; valu for 10000000
+rerunn	movlw 0x20 ; value for 0b00100000 on page 5
 	call GLCD_Datawrite
 	decfsz Y_counter
 	bra rerunn
 GLCD_set_vertical
-	movlw 0x08
-	movwf Page_counter
-hello	movlw 0x60
+	movlw 0x60; set Y address for vertical line at 0x60
 	call GLCD_Cmdwrite
-	movf Page_counter, W
-	addlw 0xB8
+	movlw 0xB8
+	call GLCD_Cmdwrite
+	movlw 0xFF
+	call GLCD_Datawrite
+	movlw 0x07
+	movwf Page_counter
+hello	movlw 0x60; set Y address for vertical line at 0x60
+	call GLCD_Cmdwrite
+	movf Page_counter, W ; unlike Y page wont increment so must use counter
+	addlw 0xB8; start at page 7 ie address 0xBF
 	call GLCD_Cmdwrite
 	movlw 0xFF
 	call GLCD_Datawrite
