@@ -45,6 +45,10 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 	call GLCD_init
 	call GLCD_set_horizontal
+	bra key_test
+	
+key_test
+	
 	call   keyboard_init
 	call   row
 	call column
@@ -52,7 +56,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	;call   LCD_Send_Byte_D
 	;call   UART_Transmit_Byte
 
-	goto	$		; goto current line in code
+	bra key_test		; goto current line in code
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
