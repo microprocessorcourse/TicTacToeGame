@@ -1,6 +1,6 @@
 #include p18f87k22.inc
  
-    global keyboard_setup, rows, columns, test1
+
 
  
 acs0    udata_acs  
@@ -15,20 +15,19 @@ column2    res 1
 column3    res 1
 col_input  res 1
 combo      res 1
+    
     code
 
-keyboard_setup
+;keyboard_setup
     banksel PADCFG1
     bsf PADCFG1, REPU, BANKED
     clrf LATE
     setf TRISE
     return
     
-rows
+;rows
     movlw 0x0F
-    movwf TRISE
-    ;movlw .2
-    ;call LCD_delay_ms
+    movwf LATE
     movff PORTE, row_input
     movlw 0x0E
     movwf row0
@@ -38,30 +37,28 @@ rows
     movwf row2
     movlw 0x07
     movwf row3
-    clrf TRISD
-    movff row_input, PORTD
     return
-    
-columns
+;columns
     clrf TRISE
     movlw 0xF0
-    movwf TRISE
-    ;call LCD_delay_ms
+    movwf LATE
     movff PORTE, col_input
-    movff col_input, PORTD
     return
 
  
 
-test1 ; this is the correct way, registers f and W have to make sense create var. combo 
+;test1 ; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
-    iorwf col_input, W
-    movlw 0xEE
-    movwf combo
+    iorwf col_input, 1
+    movff col_input, combo
     movlw 0xEE
     cpfseq combo
-    goto test2 
-    movlw "A"
+    goto test2
+    movlw 0x50
+    ;movwf Y_address
+    ;movlw 0xBE
+    ;movwf Page_address
+    ;call X_char
     return
 test2
     cpfseq combo
