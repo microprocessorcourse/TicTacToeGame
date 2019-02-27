@@ -18,6 +18,8 @@ y_address     res 1
 Xshape_counter res 1
 Xshape_drawer res 1
 Xshape_page res 1
+O_counter  res 1
+O_counter2 res 1
     constant cs1=0 ; set names for control pins
     constant cs2=1
     constant RS=2
@@ -137,16 +139,28 @@ rerunn	movlw 0x20 ; value for 0b00100000 on page 5
 	decfsz Y_counter
 	bra rerunn
 GLCD_set_vertical
-	movlw 0x60; set Y address for vertical line at 0x60
+	bsf LATB, cs2
+	movlw 0x65; set Y address for vertical line at 0x60
 	call GLCD_Cmdwrite
+	bcf LATB, cs2
+	bsf LATB, cs1
+	movlw 0x55
+	call GLCD_Cmdwrite
+	bcf LATB, cs1
 	movlw 0xB8
 	call GLCD_Cmdwrite
 	movlw 0xFF
 	call GLCD_Datawrite
 	movlw 0x07
 	movwf Page_counter
-hello	movlw 0x60; set Y address for vertical line at 0x60
+hello	bsf LATB, cs2
+	movlw 0x65; set Y address for vertical line at 0x60
 	call GLCD_Cmdwrite
+	bcf LATB, cs2
+	bsf LATB, cs1
+	movlw 0x55
+	call GLCD_Cmdwrite
+	bcf LATB, cs1
 	movf Page_counter, W ; unlike Y page wont increment so must use counter
 	addlw 0xB8; start at page 7 ie address 0xBF
 	call GLCD_Cmdwrite
@@ -157,7 +171,7 @@ hello	movlw 0x60; set Y address for vertical line at 0x60
 	return
 X_char
 line1	bsf LATB, cs2; turn off right scren to only draw X in first box
-	movlw 0x45;  this is halfway point in 1st box to make x appear in middle of box obtained from vertical line Y address
+	movlw 0x49;  this is halfway point in 1st box to make x appear in middle of box obtained from vertical line Y address
 	call GLCD_Cmdwrite
 	movlw 0xB8
 	call GLCD_Cmdwrite
@@ -184,7 +198,7 @@ hello2	call GLCD_Datawrite
 	return
 X_char2
 line2	bsf LATB, cs2; turn off right scren to only draw X in first box
-	movlw 0x45
+	movlw 0x49
 	call GLCD_Cmdwrite
 	movlw 0xB9
         movwf Xshape_page; do this on page 0
@@ -192,20 +206,60 @@ pagelo 	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
 	movwf Xshape_counter
-	movlw 0x80
+	movlw 0x80; l start as 0b10000000 instead of 0b00000001
 	movwf Xshape_drawer
 	movlw 0x80
 hello22	call GLCD_Datawrite
 	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
-	rrncf Xshape_drawer, 0; rotate right one bit no carry allows for drawing of line2 bottom to top
+	rrncf Xshape_drawer, 0; rotate right, previous was left, one bit no carry allows for drawing of line2 bottom to top
 	decfsz Xshape_counter
 	bra hello22
 	decf Xshape_page
 	movlw 0xB7
 	cpfseq Xshape_page
 	bra pagelo
+	call O_char
+	return
+O_char
+	movlw 0x68
+	call GLCD_Cmdwrite
+	movlw 0xB9
+	call GLCD_Cmdwrite
+	movlw 0x10
+	movwf O_counter
+	movlw 0x7F
+	call GLCD_Datawrite
+O_loop	movlw 0x80
+	call GLCD_Datawrite
+	decfsz O_counter
+	bra O_loop
+	movlw 0x7F
+	call GLCD_Datawrite
+	movlw 0x68
+	call GLCD_Cmdwrite
+	movlw 0xB8
+	call GLCD_Cmdwrite
+	movlw 0xFD
+	call GLCD_Datawrite
+	movlw 0x10
+	movwf O_counter2
+	movlw 0x00
+	call GLCD_Datawrite
+	movlw 0x02
+	call GLCD_Datawrite
+O_loop2	movlw 0x01
+	call GLCD_Datawrite
+	decfsz O_counter2
+	bra O_loop2
+	movlw 0x02
+	call GLCD_Datawrite
+	movlw 0xFD
+	call GLCD_Datawrite
+	movlw 0x00
+	call GLCD_Datawrite
 	bcf LATB, cs1; turn back on right screen
 	return
+	
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
 	nop
