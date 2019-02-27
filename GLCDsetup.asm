@@ -1,7 +1,8 @@
 
 #include p18f87k22.inc
 
-    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char
+    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char, GLCD_Cmdwrite, GLCD_Datawrite
+    global keyboard_init, row, column, test1
     
 ;player1_input res 1
 ;player2_input res 1
@@ -20,6 +21,11 @@ Xshape_drawer res 1
 Xshape_page res 1
 O_counter  res 1
 O_counter2 res 1
+Y_address res 1
+Page_address res 1
+row_input    res 1
+col_input    res 1
+combo      res 1
     constant cs1=0 ; set names for control pins
     constant cs2=1
     constant RS=2
@@ -171,12 +177,9 @@ hello	bsf LATB, cs2
 	return
 X_char
 line1	bsf LATB, cs2; turn off right scren to only draw X in first box
-	movlw 0x49;  this is halfway point in 1st box to make x appear in middle of box obtained from vertical line Y address
+	movf Y_address, W;  this is halfway point in 1st box to make x appear in middle of box obtained from vertical line Y address
 	call GLCD_Cmdwrite
-	movlw 0xB8
-	call GLCD_Cmdwrite
-	movlw 0xB8
-        movwf Xshape_page; do this on page 0
+	movff Page_address, Xshape_page  ; do this on page 0
 pagelop	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
@@ -186,22 +189,22 @@ pagelop	movf Xshape_page, W
 	movlw 0x01
 hello2	call GLCD_Datawrite
 	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
-	rlncf Xshape_drawer, 0; rotate left one bit no carry allows for drawing of line top to bottom
+	rlncf Xshape_drawer, 0; rotate left one bit,store in w,  no carry allows for drawing of line top to bottom
 	decfsz Xshape_counter
 	bra hello2
 	incf Xshape_page
-	movlw 0xBA
+	movlw 0x02
+	addwf Page_address, 0
 	cpfseq Xshape_page
 	bra pagelop
-	bcf LATB, cs1; turn back on right screen
 	call X_char2
 	return
 X_char2
-line2	bsf LATB, cs2; turn off right scren to only draw X in first box
-	movlw 0x49
+	movf Y_address, W
 	call GLCD_Cmdwrite
-	movlw 0xB9
-        movwf Xshape_page; do this on page 0
+	movlw 0x01
+	addwf Page_address, 1
+        movff Page_address, Xshape_page ; do this on page 0
 pagelo 	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
@@ -211,11 +214,12 @@ pagelo 	movf Xshape_page, W
 	movlw 0x80
 hello22	call GLCD_Datawrite
 	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
-	rrncf Xshape_drawer, 0; rotate right, previous was left, one bit no carry allows for drawing of line2 bottom to top
+	rrncf Xshape_drawer, 0; rotate right, previous was left, store in W, one bit no carry allows for drawing of line2 bottom to top
 	decfsz Xshape_counter
 	bra hello22
 	decf Xshape_page
-	movlw 0xB7
+	movlw 0x02
+	subwf Page_address, 0
 	cpfseq Xshape_page
 	bra pagelo
 	call O_char
@@ -239,26 +243,53 @@ O_loop	movlw 0x80
 	call GLCD_Cmdwrite
 	movlw 0xB8
 	call GLCD_Cmdwrite
-	movlw 0xFD
+	movlw 0xFE
 	call GLCD_Datawrite
 	movlw 0x10
 	movwf O_counter2
-	movlw 0x00
-	call GLCD_Datawrite
-	movlw 0x02
-	call GLCD_Datawrite
 O_loop2	movlw 0x01
 	call GLCD_Datawrite
 	decfsz O_counter2
 	bra O_loop2
-	movlw 0x02
-	call GLCD_Datawrite
-	movlw 0xFD
+	movlw 0xFE
 	call GLCD_Datawrite
 	movlw 0x00
 	call GLCD_Datawrite
 	bcf LATB, cs1; turn back on right screen
 	return
+keyboard_init
+    banksel PADCFG1
+    bsf PADCFG1, REPU, BANKED
+    clrf LATE
+    setf TRISE
+    return
+row
+    movlw 0x0F
+    movwf TRISE
+    movff PORTE, row_input
+    movff row_input, PORTH
+    return
+column
+    clrf TRISE
+    movlw 0xF0
+    movwf TRISE
+    movff PORTE, col_input
+    clrf TRISH
+    movff col_input, PORTH
+    return
+test1; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1
+    movff col_input, combo
+    movlw 0x7E
+    cpfseq combo
+    bra back
+    movlw 0x50
+    movwf Y_address
+    movlw 0xBE
+    movwf Page_address
+    call X_char
+back return
 	
 LCD_Enable	    ; pulse enable bit LCD_E for 500ns
 	nop
