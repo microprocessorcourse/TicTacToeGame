@@ -1,8 +1,9 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
-	extern  keyboard_setup, rows, columns, test1
-	extern GLCD_init, GLCD_clear, GLCD_set_horizontal, X_char
+	extern GLCD_init, GLCD_clear, GLCD_set_horizontal
+	extern X_char
+	extern keyboard_init, row, column, test1
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -44,11 +45,10 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 	call GLCD_init
 	call GLCD_set_horizontal
-	call X_char
-	;call   keyboard_setup
-	;call   rows
-	;all   columns
-	;call   test1
+	call   keyboard_init
+	call   row
+	call column
+	call test1
 	;call   LCD_Send_Byte_D
 	;call   UART_Transmit_Byte
 
