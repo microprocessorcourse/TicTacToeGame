@@ -11,12 +11,12 @@ LCD_cnt_l     res 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h     res 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms    res 1   ; reserve 1 byte for ms counter
 char_X        res 1   ; reserve memory address for X and O characters
-char_O        res 1
-Y_counter     res 1
-Page_counter  res 1    
-line_setter   res 1 
-y_address     res 1
-Xshape_counter res 1
+char_O        res 1   ;
+Y_counter     res 1   ; counter for Y address
+Page_counter  res 1   ; counter for pages
+line_setter   res 1   ; counter for lines 
+y_address     res 1   ; reserve 1 byte for y_address input from keypad
+Xshape_counter res 1  ; reserve 1 byte 
 Xshape_drawer res 1
 Xshape_page res 1
 O_counter  res 1
