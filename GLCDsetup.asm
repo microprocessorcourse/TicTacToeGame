@@ -267,6 +267,7 @@ row
     movlw 0x0F
     movwf TRISE
     movff PORTE, row_input
+    clrf TRISH    
     movff row_input, PORTH
     return
 column
