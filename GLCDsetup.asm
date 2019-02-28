@@ -1,8 +1,9 @@
 
 #include p18f87k22.inc
 
-    global GLCD_init, GLCD_test, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char, GLCD_Cmdwrite, GLCD_Datawrite
-    global keyboard_init, row, column, test1
+    global GLCD_init, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char, O_char, GLCD_Cmdwrite, GLCD_Datawrite
+    global Y_address, Page_address, Y_addressO, Page_addressO
+    global LCD_delay_ms
     
 ;player1_input res 1
 ;player2_input res 1
@@ -22,10 +23,13 @@ Xshape_page res 1     ;  for switching pages while drawing lines
 O_counter  res 1      ;  for O character counter
 O_counter2 res 1      ;  for 2nd half of O shape on next page
 Y_address res 1       ;  reserve memory for deciding which box to put an X or O, based on keypad press, coupled with page_address
-Page_address res 1    
-row_input    res 1    ; keypad inputs
-col_input    res 1
-combo      res 1      ; row_input inclusive OR with col_input stored here
+Page_address res 1
+Y_addressO   res 1
+Page_addressO res 1
+Page_address2 res 1
+;row_input    res 1    ; keypad inputs
+;col_input    res 1
+;combo      res 1      ; row_input inclusive OR with col_input stored here
     constant cs1=0 ; set names for control pins on PORTB and for certain instruction values
     constant cs2=1
     constant RS=2
@@ -113,9 +117,8 @@ y_loop_fill   movf Page_counter, W
 	      bra Page_fill
 	      return
 	      
-GLCD_set_horizontal
-	call GLCD_clear
-	movlw Y_start; start position of line
+GLCD_set_horizontal; sets tic tac toe game shape
+	movlw 0x40; start position of line
 	call GLCD_Cmdwrite
 	movlw 0xBA; set to page 2
 	call GLCD_Cmdwrite
@@ -167,10 +170,9 @@ rerun_v	bsf LATB, cs2
 	bra rerun_v
 	return
 X_char
-line1	bsf LATB, cs2; turn off right scren to only draw X in first box
-	movf Y_address, W; input from keypad sets Y_address and Page_address
+line1   movf Y_address, W; input from keypad sets Y_address and Page_address
 	call GLCD_Cmdwrite
-	movff Page_address, Xshape_page  ; do this on page 0
+	movff Page_address, Xshape_page  ; Xshape_page will inc/dec to draw X in momre tha one page
 pagelop	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
@@ -185,7 +187,7 @@ hello2	call GLCD_Datawrite
 	bra hello2
 	incf Xshape_page
 	movlw 0x02
-	addwf Page_address, 0
+	addwf Page_address, 0; once reach two pages up, stop
 	cpfseq Xshape_page
 	bra pagelop
 	call X_char2
@@ -194,33 +196,34 @@ X_char2
 	movf Y_address, W
 	call GLCD_Cmdwrite
 	movlw 0x01
-	addwf Page_address, 1
-        movff Page_address, Xshape_page ; do this on page 0
+	addwf Page_address, 0; other line starts a page lower, store add in Page_address2
+	movwf Page_address2
+        movff Page_address2, Xshape_page
 pagelo 	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
-	movwf Xshape_counter
-	movlw 0x80; l start as 0b10000000 instead of 0b00000001
+	movwf Xshape_counter; count to fill 8 bytes/a page
+	movlw 0x80; 0b10000000 for this line instead of 0b00000001
 	movwf Xshape_drawer
 	movlw 0x80
 hello22	call GLCD_Datawrite
 	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
-	rrncf Xshape_drawer, 0; rotate right, previous was left, store in W, one bit no carry allows for drawing of line2 bottom to top
+	rrncf Xshape_drawer, 0; rotate right one bit, store in W, draw bottom to top
 	decfsz Xshape_counter
 	bra hello22
 	decf Xshape_page
-	movlw 0x02
-	subwf Page_address, 0
+	movlw 0x02; once reach two pages below, stop
+	subwf Page_address2, 0
 	cpfseq Xshape_page
 	bra pagelo
-	call O_char
 	return
 O_char
-	movlw 0x68
+	bsf LATB, cs2
+	movf Y_addressO, W
 	call GLCD_Cmdwrite
-	movlw 0xB9
+	movf Page_addressO, W
 	call GLCD_Cmdwrite
-	movlw 0x10
+	movlw 0x10; makes O bigger
 	movwf O_counter
 	movlw 0x7F
 	call GLCD_Datawrite
@@ -230,9 +233,10 @@ O_loop	movlw 0x80
 	bra O_loop
 	movlw 0x7F
 	call GLCD_Datawrite
-	movlw 0x68
+	movf Y_addressO, W
 	call GLCD_Cmdwrite
-	movlw 0xB8
+	movlw 0x01
+	subwf Page_addressO, 0
 	call GLCD_Cmdwrite
 	movlw 0xFE
 	call GLCD_Datawrite
@@ -246,43 +250,9 @@ O_loop2	movlw 0x01
 	call GLCD_Datawrite
 	movlw 0x00
 	call GLCD_Datawrite
-	bcf LATB, cs1; turn back on right screen
+	bcf LATB, cs2
 	return
-keyboard_init
-    banksel PADCFG1
-    bsf PADCFG1, REPU, BANKED
-    clrf LATE
-    setf TRISE
-    return
-row
-    movlw 0x0F
-    movwf TRISE
-    movff PORTE, row_input
-    clrf TRISH    
-    movff row_input, PORTH
-    return
-column
-    clrf TRISE
-    movlw 0xF0
-    movwf TRISE
-    movff PORTE, col_input
-    clrf TRISH
-    movff col_input, PORTH
-    return
-test1; this is the correct way, registers f and W have to make sense create var. combo 
-    movf row_input, W
-    iorwf col_input, 1
-    movff col_input, combo
-    movlw 0x7E
-    cpfseq combo
-    bra back
-    movlw 0x50
-    movwf Y_address
-    movlw 0xBE
-    movwf Page_address
-    call X_char
-back return
-	
+
 LCD_Enable	    ; pulse enable bit EN, high to low is when write to GLCD
 	nop
 	nop
