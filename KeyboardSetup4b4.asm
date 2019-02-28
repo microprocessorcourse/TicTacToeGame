@@ -1,7 +1,12 @@
 #include p18f87k22.inc
  
-
-
+    global keyboard_init, test1
+    extern X_char, Y_address, Page_address
+    extern LCD_delay_ms
+    extern LCD_Send_Byte_D, LCD_Write_Hex
+    extern GLCD_set_horizontal, GLCD_clear
+	constant left=0
+	constant right=1
  
 acs0    udata_acs  
 row0       res 1
@@ -15,128 +20,175 @@ column2    res 1
 column3    res 1
 col_input  res 1
 combo      res 1
+
     
     code
-
-;keyboard_setup
+keyboard_init
     banksel PADCFG1
     bsf PADCFG1, REPU, BANKED
     clrf LATE
-    setf TRISE
+    setf TRISE; sets TRISTATE mode
+    call row_init
     return
-    
-;rows
-    movlw 0x0F
-    movwf LATE
-    movff PORTE, row_input
-    movlw 0x0E
-    movwf row0
-    movlw 0x0D
-    movwf row1
-    movlw 0x0B
-    movwf row2
-    movlw 0x07
-    movwf row3
+row_init
+    movlw 0x0F; turn on row inputs
+    movwf TRISE
+    movlw 1
+    call LCD_delay_ms; need delay between tristate and port
+    movff PORTE, row_input  
+    call column_init
     return
-;columns
-    clrf TRISE
+column_init
     movlw 0xF0
-    movwf LATE
+    movwf TRISE
+    movlw 1
+    call LCD_delay_ms
     movff PORTE, col_input
     return
-
- 
-
-;test1 ; this is the correct way, registers f and W have to make sense create var. combo 
+test1; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
-    iorwf col_input, 1
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
-    movlw 0xEE
-    cpfseq combo
+    movlw 0x77; value for '1' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test2
-    movlw 0x50
-    ;movwf Y_address
-    ;movlw 0xBE
-    ;movwf Page_address
-    ;call X_char
+    movlw 0x43
+    movwf Y_address
+    movlw 0xB8
+    movwf Page_address
+    movlw 0x22; right disp off
+    movwf PORTB
+    call X_char
+    movlw 0x21; left disp off right on, dont need to switch right disp back on
+    movwf PORTB
+    call GLCD_clear
+    call GLCD_set_horizontal
     return
-test2
-    cpfseq combo
+test2; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xB7; value for '2' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test3
-    movlw "0"
+    bsf LATB, right
+    movlw 0x68
+    movwf Y_address
+    movlw 0xB8
+    movwf Page_address
+    call X_char
+    bcf LATB, right
     return
-test3
-    cpfseq 0b11101011
+test3; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xD7; value for '3' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test4
-    movlw "B"
+    bsf LATB, left
+    movlw 0x68
+    movwf Y_address
+    movlw 0xB8
+    movwf Page_address
+    call X_char
+    bcf LATB, left
     return
-test4
-    cpfseq 0b11100111
+test4; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0x7B; value for '4' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test5
-    movlw "C"
+    movlw 0x43
+    movwf Y_address
+    movlw 0xBB
+    movwf Page_address
+    movlw 0x22; right disp off
+    movwf PORTB
+    call X_char
+    movlw 0x21; left disp off right on, dont need to switch right disp back on. this is only for current command
+    movwf PORTB
+    call GLCD_clear
+    call GLCD_set_horizontal
     return
-test5
-    cpfseq 0b11101101
+test5; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xBB; value for '5' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test6
-    movlw "7"
+    movlw 0x68
+    movwf Y_address
+    movlw 0xBB
+    movwf Page_address
+    bsf LATB, right
+    call X_char
     return
-test6
-    cpfseq 0b11011101
+test6; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xDB; value for '4' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test7
-    movlw "8"
+    bsf LATB, left
+    movlw 0x68
+    movwf Y_address
+    movlw 0xBB
+    movwf Page_address
+    call X_char
+    bcf LATB, left
     return
-test7
-    cpfseq 0b10111101
+test7; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0x7D; value for '4' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test8
-    movlw "9"
+    bsf LATB, right
+    movlw 0x43
+    movwf Y_address
+    movlw 0xBE
+    movwf Page_address
+    call X_char
+    bcf LATB, right
     return
-test8
-    cpfseq 0b01111101
+test8; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xBD; value for '8' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test9
-    movlw "D"
+    bsf LATB, right
+    movlw 0x68
+    movwf Y_address
+    movlw 0xBE
+    movwf Page_address
+    call X_char
+    bcf LATB, right
     return
-test9
-    cpfseq 0b11101011
-    goto test10
-    movlw "4"
+test9; this is the correct way, registers f and W have to make sense create var. combo 
+    movf row_input, W
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    movff col_input, combo
+    movlw 0xDD; value for '9' on keypad
+    cpfseq combo; if input value of row and column is same as 'A' then skip next line
+    goto invalid
+    bsf LATB, left
+    movlw 0x68
+    movwf Y_address
+    movlw 0xBE
+    movwf Page_address
+    call X_char
+    bcf LATB, left
     return
-test10
-    cpfseq 0b11011011
-    goto test11
-    movlw "5"
+invalid
+    nop
     return
-test11
-    cpfseq 0b10111011
-    goto test12
-    movlw "6"
-    return
-test12
-    cpfseq 0b01111011
-    goto test13
-    movlw "E"
-    return
-test13
-    cpfseq 0b11100111
-    goto test14
-    movlw "1"
-    return
-test14 
-    cpfseq 0b11010111
-    goto test15
-    movlw "2"
-    return
-test15
-    cpfseq 0b10110111
-    goto test16
-    movlw "3"
-    return
-test16
-    cpfseq 0b01110111
-    goto test17
-    movlw "F"
-    return
-test17
-    movlw 0x00
-    return
-
-    end
+    
+    end   
