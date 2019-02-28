@@ -2,8 +2,10 @@
 
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
 	extern GLCD_init, GLCD_clear, GLCD_set_horizontal
-	extern X_char
-	extern keyboard_init, row, column, test1
+	extern X_char, O_char
+	extern Y_address, Page_address, Y_addressO, Page_addressO
+	extern keyboard_init, test1
+	extern LCD_Setup
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -45,21 +47,17 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 	call GLCD_init
 	call GLCD_set_horizontal
-	bra key_test
-	
-key_test
-	
-	call   keyboard_init
-	call   row
-	call column
-	call test1
+key_test call keyboard_init
+	 call test1
+	;movlw 0xB8
+	;lmovwf Page_address
+	;call O_char
 	;call   LCD_Send_Byte_D
 	;call   UART_Transmit_Byte
-
-	bra key_test		; goto current line in code
+        goto $		; goto current line in code
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
 	return
-
-    end
+	
+	end
