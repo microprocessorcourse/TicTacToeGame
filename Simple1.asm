@@ -1,5 +1,6 @@
 	#include p18f87k22.inc
-
+	
+	global XO_switcher
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
 	extern GLCD_init, GLCD_clear, GLCD_set_horizontal
 	extern X_char, O_char
@@ -47,8 +48,43 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 	call GLCD_init
 	call GLCD_set_horizontal
-key_test call keyboard_init
-	 call test1
+	movlw 0x09
+	movwf round_counter
+rounds	movlw 0x01 
+	movwf XO_switcher
+key_test
+	nop
+	nop
+	nop
+	nop
+	call keyboard_init
+	nop
+	nop
+	nop
+	nop
+	call test1
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	movlw 1
+	call LCD_delay_ms
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	decfsz XO_switcher
+	bra key_test 
+	decfsz round_counter
+	bra rounds
 	;movlw 0xB8
 	;lmovwf Page_address
 	;call O_char
