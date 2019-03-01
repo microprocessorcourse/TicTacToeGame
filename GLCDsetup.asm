@@ -44,7 +44,6 @@ chip2        res 1
   
 GLCD code
 
-
 GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 and page and Y address start then turn on again
     clrf LATB
     clrf TRISD ; sets PORTB and PORTD as output
@@ -52,12 +51,12 @@ GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 a
     bsf LATB, RST ; reset is ON when reset switch is low, so keep high to display GLCD
     bcf LATB, cs1 ; cs1 and cs2 on when low, determines left and right half of display
     bsf LATB, cs2 
+chip movlw 20 ; 20ms delay after latch
+    call LCD_delay_ms
     movlw 0x01
     movwf chip_counter
     movwf chip1
     movwf chip2
-chip movlw 20 ; 20ms delay after latch
-    call LCD_delay_ms
     movlw DISP_OFF ; init starts here
     call GLCD_Cmdwrite
     movlw Y_start    ; set Y address starting point, horizontal
@@ -68,15 +67,47 @@ chip movlw 20 ; 20ms delay after latch
     call GLCD_Cmdwrite
     movlw DISP_ON
     call GLCD_Cmdwrite
-    movlw .10
-    call LCD_delay_ms
     decfsz chip1
-    bsf LATB, cs1
-    decfsz chip2
     bcf LATB, cs2
+    decfsz chip2
+    bsf LATB, cs1
     decfsz chip_counter
     bra chip
     return 
+;GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 and page and Y address start then turn on again
+    ;clrf LATB
+    ;clrf TRISD ; sets PORTB and PORTD as output
+    ;clrf TRISB
+    ;bsf LATB, RST ; reset is ON when reset switch is low, so keep high to display GLCD
+    ;bcf LATB, cs1 ; cs1 and cs2 on when low, determines left and right half of display
+    ;bcf LATB, cs2 
+    ;movlw 20 ; 20ms delay after latch
+    ;call LCD_delay_ms
+    ;movlw 0x01
+    ;movwf chip_counter
+    ;movwf chip1
+    ;movwf chip2
+    ;movlw 20 ; 20ms delay after latch
+    ;call LCD_delay_ms
+    ;movlw DISP_OFF ; init starts here
+    ;call GLCD_Cmdwrite
+    ;movlw Y_start    ; set Y address starting point, horizontal
+    ;call GLCD_Cmdwrite
+    ;movlw Page0 ; sets line   line 0 in this case with B8 up to BF and each line has 8 pixels
+    ;call GLCD_Cmdwrite
+    ;movlw 0xC0 ; set starting page of display, this is not changed once set as it shifts entire display
+    ;call GLCD_Cmdwrite
+    ;movlw DISP_ON
+    ;call GLCD_Cmdwrite
+    ;movlw .10
+    ;call LCD_delay_ms
+    ;decfsz chip1
+    ;bsf LATB, cs1
+    ;decfsz chip2
+   ; bcf LATB, cs2
+   ;decfsz chip_counter
+    ;bra chip
+    ;return 
     
 GLCD_Cmdwrite ; write instructions to GLCD
     movwf PORTD ; PORTD is data bus
@@ -93,6 +124,8 @@ GLCD_Datawrite; write data to GLCD, 1 byte is a vertical row of 8 pixels at give
     return
     
 GLCD_clear; clear entire display
+              bcf LATB, cs1
+	      bcf LATB, cs2
 	      movlw 0x08; 8 vertical pages in total with a byte/page/Yaddress
               movwf Page_counter
 Page_clear    movlw Y_start
@@ -111,9 +144,11 @@ y_loop        movf Page_counter, W
 
 	      
 GLCD_fill; idnetical to GLCD_clear with 0xFF to fill
+	      bcf LATB, cs1
+	      bcf LATB, cs2
 	      movlw 0x08
               movwf Page_counter
-Page_fill    movlw Y_start
+Page_fill     movlw Y_start
 	      call GLCD_Cmdwrite
 	      movwf Y_counter
 y_loop_fill   movf Page_counter, W
