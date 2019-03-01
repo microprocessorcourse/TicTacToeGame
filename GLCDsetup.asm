@@ -27,9 +27,9 @@ Page_address res 1
 Y_addressO   res 1
 Page_addressO res 1
 Page_address2 res 1
-;row_input    res 1    ; keypad inputs
-;col_input    res 1
-;combo      res 1      ; row_input inclusive OR with col_input stored here
+chip_counter res 1
+chip1        res 1
+chip2        res 1
     constant cs1=0 ; set names for control pins on PORTB and for certain instruction values
     constant cs2=1
     constant RS=2
