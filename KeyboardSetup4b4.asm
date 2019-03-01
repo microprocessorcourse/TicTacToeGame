@@ -5,6 +5,7 @@
     extern LCD_delay_ms
     extern LCD_Send_Byte_D, LCD_Write_Hex
     extern GLCD_set_horizontal, GLCD_clear
+    extern XO_switcher
 	constant left=0
 	constant right=1
  
@@ -28,6 +29,8 @@ keyboard_init
     bsf PADCFG1, REPU, BANKED
     clrf LATE
     setf TRISE; sets TRISTATE mode
+    movlw .5
+    call LCD_delay_ms
     call row_init
     return
 row_init
@@ -52,18 +55,33 @@ test1; this is the correct way, registers f and W have to make sense create var.
     movlw 0x77; value for '1' on keypad
     cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test2
+    movlw 0x00
+    cpfseq O_switcher
+    cpfsgt O_switch
+    bra O_check
+    bcf LATB, left
+    bsf LATB, right
     movlw 0x43
     movwf Y_address
     movlw 0xB8
     movwf Page_address
-    movlw 0x22; right disp off
-    movwf PORTB
     call X_char
-    movlw 0x21; left disp off right on, dont need to switch right disp back on
-    movwf PORTB
-    call GLCD_clear
-    call GLCD_set_horizontal
-    return
+    bra out
+O_check 
+    bcf LATB, left 
+    bsf LATB, right
+    movlw 0x43
+    movwf Y_addressO
+    movlw 0xB9; start at lower page of two
+    movwf Page_addressO
+    call O_char
+    ;movlw 0x22; right disp off
+    ;movwf PORTB
+    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
+    ;movwf PORTB
+    ;call GLCD_clear
+    ;call GLCD_set_horizontal
+out  return
 test2; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
