@@ -228,7 +228,6 @@ hello22	call GLCD_Datawrite
 	bra pagelo
 	return
 O_char
-	bsf LATB, cs2
 	movf Y_addressO, W
 	call GLCD_Cmdwrite
 	movf Page_addressO, W
@@ -237,16 +236,16 @@ O_char
 	movwf O_counter
 	movlw 0x7F
 	call GLCD_Datawrite
-O_loop	movlw 0x80
+O_loop	movlw 0x80; 
 	call GLCD_Datawrite
 	decfsz O_counter
 	bra O_loop
 	movlw 0x7F
 	call GLCD_Datawrite
-	movf Y_addressO, W
+	movf Y_addressO, W; now top horizontal line of 'o'
 	call GLCD_Cmdwrite
 	movlw 0x01
-	subwf Page_addressO, 0
+	subwf Page_addressO, 0; second half of 'o'
 	call GLCD_Cmdwrite
 	movlw 0xFE
 	call GLCD_Datawrite
@@ -260,7 +259,6 @@ O_loop2	movlw 0x01
 	call GLCD_Datawrite
 	movlw 0x00
 	call GLCD_Datawrite
-	bcf LATB, cs2
 	return
 
 LCD_Enable	    ; pulse enable bit EN, high to low is when write to GLCD
