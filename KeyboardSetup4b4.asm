@@ -1,11 +1,10 @@
 #include p18f87k22.inc
  
     global keyboard_init, test1
-    extern X_char, Y_address, Page_address
+    extern X_char, O_char, Y_address, Page_address, Y_addressO, Page_addressO
     extern LCD_delay_ms
-    extern LCD_Send_Byte_D, LCD_Write_Hex
     extern GLCD_set_horizontal, GLCD_clear
-    extern XO_switcher
+    extern XO_switcher, round_counter
 	constant left=0
 	constant right=1
  
@@ -56,8 +55,8 @@ test1; this is the correct way, registers f and W have to make sense create var.
     cpfseq combo; if input value of row and column is same as 'A' then skip next line
     goto test2
     movlw 0x00
-    cpfseq O_switcher
-    cpfsgt O_switch
+    cpfseq XO_switcher
+    cpfsgt XO_switcher
     bra O_check
     bcf LATB, left
     bsf LATB, right
@@ -196,7 +195,7 @@ test9; this is the correct way, registers f and W have to make sense create var.
     movff col_input, combo
     movlw 0xDD; value for '9' on keypad
     cpfseq combo; if input value of row and column is same as 'A' then skip next line
-    goto invalid
+    goto play_again
     bsf LATB, left
     movlw 0x68
     movwf Y_address
@@ -204,6 +203,19 @@ test9; this is the correct way, registers f and W have to make sense create var.
     movwf Page_address
     call X_char
     bcf LATB, left
+    return
+play_again
+    movf row_input, W
+    iorwf col_input, 1
+    movff col_input, combo
+    movlw 0x7E
+    cpfseq combo
+    goto invalid
+    call GLCD_clear
+    call GLCD_set_horizontal
+    movlw 0x00
+    movwf round_counter
+    movwf XO_switcher
     return
 invalid
     nop
