@@ -51,12 +51,12 @@ GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 a
     bsf LATB, RST ; reset is ON when reset switch is low, so keep high to display GLCD
     bcf LATB, cs1 ; cs1 and cs2 on when low, determines left and right half of display
     bsf LATB, cs2 
-chip movlw 20 ; 20ms delay after latch
-    call LCD_delay_ms
     movlw 0x01
     movwf chip_counter
     movwf chip1
     movwf chip2
+chip movlw 20 ; 20ms delay after latch
+    call LCD_delay_ms
     movlw DISP_OFF ; init starts here
     call GLCD_Cmdwrite
     movlw Y_start    ; set Y address starting point, horizontal
