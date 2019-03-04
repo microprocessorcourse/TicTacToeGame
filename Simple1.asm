@@ -1,4 +1,8 @@
 	#include p18f87k22.inc
+	; code starts at line 49, was having issues with deleting what was before it
+	; simple1 allows for calling general GLCD routines and also for looping keypad presses in order to allow consecutive presses 
+	; and switching between XO
+	
 	
 	global XO_switcher, round_counter
 	extern	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external UART subroutines
@@ -11,7 +15,6 @@ acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
 XO_switcher res 1
-round_counter res 1
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
 
@@ -46,26 +49,24 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	bra	loop		; keep going until finished
 	
 	
-	call GLCD_init
+	call GLCD_init; code starts here
 	call GLCD_clear
-	call GLCD_set_horizontal
-	movlw 0x09
-	movwf round_counter
-rounds	movlw 0x01
+	call GLCD_set_horizontal; sets tic-tac-toe shape, horizontal and vertical
+rounds	movlw 0x01; start with X character as first one 
 	movwf XO_switcher
 key_test
 	nop
 	nop
 	nop
 	nop
-	call keyboard_init
+	call keyboard_init; sets up row_input, col_input and combo
 	nop
 	nop
 	nop
 	movlw 1
 	call LCD_delay_ms
 	nop
-	call test1
+	call test1; checks with box has been pressed and draws characters in it
 	nop
 	nop
 	nop
@@ -83,9 +84,7 @@ key_test
 	nop
 	movlw 1000
 	call LCD_delay_ms
-	bra key_test 
-	decfsz round_counter
-	bra rounds
+	bra key_test; loops around to allow multiple presses
         goto $		; goto current line in code
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
