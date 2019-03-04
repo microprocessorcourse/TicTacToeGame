@@ -1,4 +1,6 @@
-
+; main GLCD code, intialises GLCD
+; GLCD sending instructions via Cmdwrite and sending a byte of data via Datawrite using pulse enable/lcdenable routine
+; GLCDclear routine, draw game shape, and draw X/O characters also included here, called in simple1
 #include p18f87k22.inc
 
     global GLCD_init, GLCD_clear, GLCD_fill, GLCD_set_horizontal, X_char, O_char, GLCD_Cmdwrite, GLCD_Datawrite
@@ -252,7 +254,7 @@ O_loop	movlw 0x80; draw in exact values to get an O shape
 	call GLCD_Datawrite
 	movlw 0x10
 	movwf O_counter2
-O_loop2	movlw 0x01
+O_loop2	movlw 0x01; looping again for top half
 	call GLCD_Datawrite
 	decfsz O_counter2
 	bra O_loop2
