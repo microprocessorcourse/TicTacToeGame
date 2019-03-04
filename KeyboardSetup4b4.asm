@@ -24,11 +24,11 @@ combo      res 1
     
     code
 keyboard_init
-    banksel PADCFG1
+    banksel PADCFG1; set pull up resistor on for PORTE
     bsf PADCFG1, REPU, BANKED
     clrf LATE
     setf TRISE; sets TRISTATE mode
-    movlw .5
+    movlw .5; delay required after setting TRISTATE
     call LCD_delay_ms
     call row_init
     return
@@ -41,7 +41,7 @@ row_init
     call column_init
     return
 column_init
-    movlw 0xF0
+    movlw 0xF0; make column pins inputs
     movwf TRISE
     movlw 1
     call LCD_delay_ms
@@ -49,41 +49,35 @@ column_init
     return
 test1; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
-    iorwf col_input, 1; stores inclusive OR with row_input in col_input
+    iorwf col_input, 1; stores inclusive OR with row_input in col_input, store in col_input
     movff col_input, combo
     movlw 0x77; value for '1' on keypad
     cpfseq combo; if input value of row and column is same as 'A' then skip next line
-    goto test2
+    goto test2; otherwise try next possible key input
     movlw 0x00
-    cpfseq XO_switcher
+    cpfseq XO_switcher; if XO_switcher is 0 will draw on O so goes to line60, if XO_switcher=1 will draw an X
     cpfsgt XO_switcher
     bra O_check1
-    bcf LATB, right
-    bcf LATB, left
+    bsf LATB, right; turn off right display to write in box 1 only, bug here
     movlw 0x43
-    movwf Y_address
+    movwf Y_address; sets Y address corresponding to box 1
     movlw 0xB8
-    movwf Page_address
-    call X_char
-    decf XO_switcher
+    movwf Page_address; sets page address corresponding to box 1
+    call X_char; draws X
+    decf XO_switcher; changes XO_switcher to 0 such that in the next loop (see simple1) an O is drawn
+    bcf LATB, right; turns back on right display
     bra out1
 O_check1 
     bcf LATB, left 
     bsf LATB, right 
     movlw 0x43
     movwf Y_addressO
-    movlw 0xB9; start at lower page of two
+    movlw 0xB9; O address for same box is one lower than X address based on how O_char routine is setup
     movwf Page_addressO
-    call O_char
-    incf XO_switcher
-    ;movlw 0x22; right disp off
-    ;movwf PORTB
-    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
-    ;movwf PORTB
-    ;call GLCD_clear
-    ;call GLCD_set_horizontal
+    call O_char; draws O
+    incf XO_switcher; changes XO_switcher to 1 such that next loop (see simple1) an X is drawn
 out1  return
-test2; this is the correct way, registers f and W have to make sense create var. combo 
+test2; check for box 2 
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -96,7 +90,7 @@ test2; this is the correct way, registers f and W have to make sense create var.
     bra O_check2
     bcf LATB, left
     bsf LATB, right
-    movlw 0x68
+    movlw 0x68; address for box 2
     movwf Y_address
     movlw 0xB8
     movwf Page_address
@@ -121,7 +115,7 @@ O_check2
     ;call GLCD_clear
     ;call GLCD_set_horizontal
 out2  return
-test3; this is the correct way, registers f and W have to make sense create var. combo 
+test3;
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -157,7 +151,7 @@ O_check3
     ;call GLCD_clear
     ;call GLCD_set_horizontal
 out3  return
-test4; this is the correct way, registers f and W have to make sense create var. combo 
+test4; 
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -196,7 +190,7 @@ O_check4
     ;call GLCD_clear
     ;call GLCD_set_horizontal
 out4  return
-test5; this is the correct way, registers f and W have to make sense create var. combo 
+test5;
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -235,7 +229,7 @@ O_check5
     ;call GLCD_clear
     ;call GLCD_set_horizontal
 out5  return
-test6; this is the correct way, registers f and W have to make sense create var. combo 
+test6; 
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -271,7 +265,7 @@ O_check6
     ;call GLCD_clear
     ;call GLCD_set_horizontal
 out6  return
-test7; this is the correct way, registers f and W have to make sense create var. combo 
+test7; 
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -304,12 +298,6 @@ O_check7
     bcf LATB, left 
     bsf LATB, right
     incf XO_switcher
-    ;movlw 0x22; right disp off
-    ;movwf PORTB
-    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
-    ;movwf PORTB
-    ;call GLCD_clear
-    ;call GLCD_set_horizontal
 out7  return
 test8; this is the correct way, registers f and W have to make sense create var. combo 
     movf row_input, W
@@ -342,14 +330,8 @@ O_check8
     movwf Page_addressO
     call O_char
     incf XO_switcher
-    ;movlw 0x22; right disp off
-    ;movwf PORTB
-    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
-    ;movwf PORTB
-    ;call GLCD_clear
-    ;call GLCD_set_horizontal
 out8  return
-test9; this is the correct way, registers f and W have to make sense create var. combo 
+test9;  
     movf row_input, W
     iorwf col_input, 1; stores inclusive OR with row_input in col_input
     movff col_input, combo
@@ -378,16 +360,7 @@ O_check9
     movwf Page_addressO
     call O_char
     incf XO_switcher
-    ;movlw 0x22; right disp off
-    ;movwf PORTB
-    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
-    ;movwf PORTB
-    ;call GLCD_clear
-    ;call GLCD_set_horizontal
-out9
-    bsf LATB, left
-    bsf LATB, right
-    return
+out9 return`
 play_again
     movf row_input, W
     iorwf col_input, 1
