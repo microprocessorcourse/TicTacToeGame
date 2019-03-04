@@ -50,7 +50,7 @@ GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 a
     clrf TRISB
     bsf LATB, RST ; reset is ON when reset switch is low, so keep high to display GLCD
     bcf LATB, cs1 ; cs1 and cs2 on when low, determines left and right half of display
-    bsf LATB, cs2 
+    bsf LATB, cs2 ; initiliazes chipsets separately
     movlw 0x01
     movwf chip_counter
     movwf chip1
@@ -74,40 +74,6 @@ chip movlw 20 ; 20ms delay after latch
     decfsz chip_counter
     bra chip
     return 
-;GLCD_init ; need to turn off GLCD and initialize by setting display start 0xC0 and page and Y address start then turn on again
-    ;clrf LATB
-    ;clrf TRISD ; sets PORTB and PORTD as output
-    ;clrf TRISB
-    ;bsf LATB, RST ; reset is ON when reset switch is low, so keep high to display GLCD
-    ;bcf LATB, cs1 ; cs1 and cs2 on when low, determines left and right half of display
-    ;bcf LATB, cs2 
-    ;movlw 20 ; 20ms delay after latch
-    ;call LCD_delay_ms
-    ;movlw 0x01
-    ;movwf chip_counter
-    ;movwf chip1
-    ;movwf chip2
-    ;movlw 20 ; 20ms delay after latch
-    ;call LCD_delay_ms
-    ;movlw DISP_OFF ; init starts here
-    ;call GLCD_Cmdwrite
-    ;movlw Y_start    ; set Y address starting point, horizontal
-    ;call GLCD_Cmdwrite
-    ;movlw Page0 ; sets line   line 0 in this case with B8 up to BF and each line has 8 pixels
-    ;call GLCD_Cmdwrite
-    ;movlw 0xC0 ; set starting page of display, this is not changed once set as it shifts entire display
-    ;call GLCD_Cmdwrite
-    ;movlw DISP_ON
-    ;call GLCD_Cmdwrite
-    ;movlw .10
-    ;call LCD_delay_ms
-    ;decfsz chip1
-    ;bsf LATB, cs1
-    ;decfsz chip2
-   ; bcf LATB, cs2
-   ;decfsz chip_counter
-    ;bra chip
-    ;return 
     
 GLCD_Cmdwrite ; write instructions to GLCD
     movwf PORTD ; PORTD is data bus
@@ -132,7 +98,7 @@ Page_clear    movlw Y_start
 	      call GLCD_Cmdwrite
 	      movwf Y_counter
 y_loop        movf Page_counter, W
-	      addlw Page0; add 0xB8 to 0x08, start at last page clear bottom to top
+	      addlw Page0; add 0xB8 to 0x08, start at last page  (0xBF) clear bottom to top
 	      call GLCD_Cmdwrite
 	      movlw 0x00; clear
 	      call GLCD_Datawrite; Y_address increments automatically here
@@ -217,14 +183,14 @@ rerun_v	bsf LATB, cs2
 X_char
 line1   movf Y_address, W; input from keypad sets Y_address and Page_address
 	call GLCD_Cmdwrite
-	movff Page_address, Xshape_page  ; Xshape_page will inc/dec to draw X in momre tha one page
+	movff Page_address, Xshape_page  ; Xshape_page will inc/dec to draw X in more than one page
 pagelop	movf Xshape_page, W
 	call GLCD_Cmdwrite
 	movlw 0x08
 	movwf Xshape_counter
-	movlw 0x01
+	movlw 0x01; this draws the positive sloped line
 	movwf Xshape_drawer
-	movlw 0x01
+	movlw 0x01; draw 0x01 and rotate left, starts at top
 hello2	call GLCD_Datawrite
 	movff PORTD, Xshape_drawer; calling data write moves contents from w to PORTD so must bring back
 	rlncf Xshape_drawer, 0; rotate left one bit,store in w,  no carry allows for drawing of line top to bottom
@@ -232,12 +198,12 @@ hello2	call GLCD_Datawrite
 	bra hello2
 	incf Xshape_page
 	movlw 0x02
-	addwf Page_address, 0; once reach two pages up, stop
-	cpfseq Xshape_page
+	addwf Page_address, 0; two pages up is limit to draw character, store in W
+	cpfseq Xshape_page; once its two pages up stop drawing
 	bra pagelop
 	call X_char2
 	return
-X_char2
+X_char2; this draws the positively sloped line for the X character
 	movf Y_address, W
 	call GLCD_Cmdwrite
 	movlw 0x01
@@ -257,32 +223,32 @@ hello22	call GLCD_Datawrite
 	decfsz Xshape_counter
 	bra hello22
 	decf Xshape_page
-	movlw 0x02; once reach two pages below, stop
+	movlw 0x02; once reach two pages below, stop.  Unlike for other line, now working downwards 
 	subwf Page_address2, 0
 	cpfseq Xshape_page
 	bra pagelo
 	return
-O_char
-	movf Y_addressO, W
+O_char; draws O character
+	movf Y_addressO, W; variable address Y_addressO to put O in any box
 	call GLCD_Cmdwrite
 	movf Page_addressO, W
 	call GLCD_Cmdwrite
-	movlw 0x10; makes O bigger
+	movlw 0x10; makes O bigger, scaling
 	movwf O_counter
 	movlw 0x7F
 	call GLCD_Datawrite
-O_loop	movlw 0x80; 
+O_loop	movlw 0x80; draw in exact values to get an O shape
 	call GLCD_Datawrite
 	decfsz O_counter
-	bra O_loop
+	bra O_loop; use same value to draw O so loop it
 	movlw 0x7F
 	call GLCD_Datawrite
-	movf Y_addressO, W; now top horizontal line of 'o'
+	movf Y_addressO, W; now top horizontal line of 'o', split O into two halves to make it larger
 	call GLCD_Cmdwrite
 	movlw 0x01
 	subwf Page_addressO, 0; second half of 'o'
 	call GLCD_Cmdwrite
-	movlw 0xFE
+	movlw 0xFE; draws a part of the O shape
 	call GLCD_Datawrite
 	movlw 0x10
 	movwf O_counter2
@@ -314,8 +280,8 @@ LCD_Enable	    ; pulse enable bit EN, high to low is when write to GLCD
 	nop
 	nop
 	nop
-	bcf	    LATB, EN	    ; Writes data to LCD, high to low transitions
-	movlw .1
+	bcf	    LATB, EN	    ; Writes data to GLCD, high to low transitions
+	movlw .1; minimum required delay for EN, 1ms
 	call LCD_delay_ms
 	return
     
