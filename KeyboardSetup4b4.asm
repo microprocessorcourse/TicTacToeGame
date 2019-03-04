@@ -1,4 +1,7 @@
 #include p18f87k22.inc
+; sets up keyboard pins
+; allows for input from keys 1-9 and key 'A' for play again
+; allows for pressing a number to draw a character (X/O) in a designated box
  
     global keyboard_init, test1
     extern X_char, O_char, Y_address, Page_address, Y_addressO, Page_addressO
@@ -258,12 +261,6 @@ O_check6
     movwf Page_addressO
     call O_char
     incf XO_switcher
-    ;movlw 0x22; right disp off
-    ;movwf PORTB
-    ;movlw 0x21; left disp off right on, dont need to switch right disp back on
-    ;movwf PORTB
-    ;call GLCD_clear
-    ;call GLCD_set_horizontal
 out6  return
 test7; 
     movf row_input, W
@@ -361,7 +358,7 @@ O_check9
     call O_char
     incf XO_switcher
 out9 return`
-play_again
+play_again; allows for wiping the characters out of the boxes and playing again by pressing A
     movf row_input, W
     iorwf col_input, 1
     movff col_input, combo
@@ -373,7 +370,7 @@ play_again
     movlw 0x01
     movwf XO_switcher
     return
-invalid
+invalid; if no applicable key is pressed will return and loop again, minimises accidental key presses
     nop
     return
     end   
